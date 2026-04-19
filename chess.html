@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天球象棋 · Sphere Xiangqi</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0612;
+    --bg-mid: #14091f;
+    --ink: #f5e6c8;
+    --red: #c8322a;
+    --red-bright: #e85a4f;
+    --black: #1a1a1a;
+    --black-bright: #4a4a4a;
+    --gold: #d4a84b;
+    --gold-dim: #8a6d2a;
+    --river: #2a6b8f;
+    --glow-red: rgba(232, 90, 79, 0.6);
+    --glow-black: rgba(180, 180, 200, 0.5);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg-deep);
+    color: var(--ink);
+    font-family: 'Noto Serif TC', serif;
+    user-select: none;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(100, 40, 80, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(40, 60, 120, 0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, var(--bg-mid) 0%, var(--bg-deep) 70%);
+  }
+  #stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  #canvas-container {
+    position: fixed; inset: 0; z-index: 1;
+  }
+  canvas { display: block; }
+
+  /* --- HUD --- */
+  .hud {
+    position: fixed; z-index: 10;
+    pointer-events: none;
+  }
+  .hud > * { pointer-events: auto; }
+
+  .title-bar {
+    top: 20px; left: 50%; transform: translateX(-50%);
+    text-align: center;
+  }
+  .title-bar h1 {
+    font-size: 28px; font-weight: 900;
+    letter-spacing: 0.4em;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212, 168, 75, 0.4);
+    margin-bottom: 2px;
+  }
+  .title-bar .sub {
+    font-family: 'Cinzel', serif;
+    font-size: 10px; letter-spacing: 0.5em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  .player-info {
+    position: fixed;
+    padding: 14px 22px;
+    background: linear-gradient(135deg, rgba(20, 10, 30, 0.9), rgba(10, 5, 20, 0.7));
+    border: 1px solid var(--gold-dim);
+    backdrop-filter: blur(10px);
+    min-width: 180px;
+  }
+  .player-info.red {
+    top: 80px; left: 20px;
+    border-color: var(--red);
+    box-shadow: 0 0 30px rgba(200, 50, 42, 0.2), inset 0 0 20px rgba(200, 50, 42, 0.05);
+  }
+  .player-info.black {
+    bottom: 20px; right: 20px;
+    border-color: var(--black-bright);
+    box-shadow: 0 0 30px rgba(100, 100, 120, 0.2), inset 0 0 20px rgba(100, 100, 120, 0.05);
+  }
+  .player-info .label {
+    font-size: 10px; letter-spacing: 0.3em;
+    opacity: 0.6; margin-bottom: 4px;
+    font-family: 'Cinzel', serif;
+  }
+  .player-info .name {
+    font-size: 20px; font-weight: 900;
+    letter-spacing: 0.2em;
+  }
+  .player-info.red .name { color: var(--red-bright); }
+  .player-info.black .name { color: var(--ink); }
+  .player-info .status {
+    font-size: 11px; margin-top: 6px;
+    opacity: 0.7;
+  }
+  .player-info.active {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  .player-info.red.active {
+    box-shadow: 0 0 50px var(--glow-red), inset 0 0 30px rgba(200, 50, 42, 0.15);
+  }
+  .player-info.black.active {
+    box-shadow: 0 0 50px var(--glow-black), inset 0 0 30px rgba(200, 200, 220, 0.1);
+  }
+  @keyframes pulse-glow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.15); }
+  }
+
+  .controls {
+    top: 130px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .lang-switch {
+    position: fixed;
+    top: 20px; right: 20px;
+    z-index: 10;
+    display: flex;
+    background: rgba(10, 5, 20, 0.8);
+    border: 1px solid var(--gold-dim);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+  .lang-switch button {
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.5;
+  }
+  .lang-switch button.active {
+    background: var(--gold-dim);
+    color: #000;
+    opacity: 1;
+  }
+  .lang-switch button:not(.active):hover {
+    opacity: 0.9;
+    background: rgba(212, 168, 75, 0.1);
+  }
+  .btn {
+    padding: 10px 18px;
+    background: rgba(20, 10, 30, 0.8);
+    border: 1px solid var(--gold-dim);
+    color: var(--ink);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px; letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .btn:hover {
+    border-color: var(--gold);
+    background: rgba(40, 20, 50, 0.9);
+    box-shadow: 0 0 20px rgba(212, 168, 75, 0.3);
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--red), #8a1f1a);
+    border-color: var(--red-bright);
+    color: #fff;
+  }
+  .btn.primary:hover {
+    box-shadow: 0 0 25px var(--glow-red);
+  }
+
+  /* --- Bottom info bar --- */
+  .info-bar {
+    bottom: 20px; left: 20px;
+    padding: 12px 20px;
+    background: rgba(10, 5, 20, 0.8);
+    border-left: 3px solid var(--gold);
+    backdrop-filter: blur(10px);
+    max-width: 320px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .info-bar .hint-title {
+    color: var(--gold);
+    font-size: 10px; letter-spacing: 0.3em;
+    margin-bottom: 6px;
+    font-family: 'Cinzel', serif;
+  }
+
+  /* --- Modal --- */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal {
+    max-width: 580px; width: 100%;
+    background: linear-gradient(165deg, var(--bg-mid), var(--bg-deep));
+    border: 1px solid var(--gold);
+    padding: 40px;
+    box-shadow: 0 0 60px rgba(212, 168, 75, 0.2);
+    position: relative;
+  }
+  .modal::before {
+    content: ''; position: absolute;
+    inset: 6px; border: 1px solid var(--gold-dim);
+    pointer-events: none;
+  }
+  .modal h2 {
+    font-size: 26px; font-weight: 900;
+    color: var(--gold); text-align: center;
+    letter-spacing: 0.3em; margin-bottom: 6px;
+  }
+  .modal .subtitle {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 11px; letter-spacing: 0.4em;
+    color: var(--gold-dim);
+    margin-bottom: 28px;
+  }
+  .modal p { font-size: 14px; line-height: 1.8; margin-bottom: 16px; opacity: 0.9; }
+  .modal .rules {
+    background: rgba(0,0,0,0.3);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13px; line-height: 1.9;
+    border-left: 2px solid var(--gold-dim);
+  }
+  .modal .rules strong { color: var(--gold); }
+  .modal .actions {
+    display: flex; gap: 12px; margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .modal .actions .btn { flex: 1; min-width: 140px; padding: 14px; font-size: 14px; }
+
+  .invite-box {
+    background: rgba(0,0,0,0.4);
+    border: 1px dashed var(--gold-dim);
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-family: monospace;
+    font-size: 12px;
+    word-break: break-all;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .invite-box:hover {
+    border-color: var(--gold);
+    background: rgba(20, 10, 30, 0.6);
+  }
+  .copy-hint {
+    font-size: 10px; letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-align: center;
+    margin-top: -6px; margin-bottom: 12px;
+    font-family: 'Cinzel', serif;
+  }
+
+  .status-line {
+    text-align: center;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--gold-dim);
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  .status-line .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-right: 8px;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .toast {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid var(--gold);
+    font-size: 18px;
+    letter-spacing: 0.3em;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .toast.show {
+    opacity: 1;
+  }
+  .toast.win { color: var(--gold); box-shadow: 0 0 60px var(--gold); }
+  .toast.lose { color: var(--red-bright); box-shadow: 0 0 60px var(--glow-red); }
+
+  .captured {
+    position: fixed;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 180px;
+  }
+  .captured.red {
+    top: 190px; left: 20px;
+  }
+  .captured.black {
+    bottom: 130px; right: 20px;
+  }
+  .captured .piece-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+    border: 1px solid;
+  }
+  .captured .piece-icon.red {
+    background: #2a0a08; color: var(--red-bright);
+    border-color: var(--red);
+  }
+  .captured .piece-icon.black {
+    background: #0a0a0a; color: var(--ink);
+    border-color: var(--black-bright);
+  }
+
+  @media (max-width: 700px) {
+    .title-bar h1 { font-size: 20px; letter-spacing: 0.3em; }
+    .player-info { min-width: 140px; padding: 10px 14px; }
+    .player-info.red { top: 70px; left: 10px; }
+    .player-info.black { bottom: 10px; right: 10px; }
+    .player-info .name { font-size: 16px; }
+    .controls { top: 120px; right: 10px; }
+    .btn { padding: 8px 12px; font-size: 11px; }
+    .lang-switch { top: 10px; right: 10px; }
+    .lang-switch button { padding: 6px 10px; font-size: 10px; }
+    .info-bar { max-width: 180px; font-size: 11px; padding: 8px 12px; bottom: 10px; left: 10px; }
+    .modal { padding: 28px 20px; }
+    .modal h2 { font-size: 20px; }
+    .captured { max-width: 120px; }
+    .captured .piece-icon { width: 22px; height: 22px; font-size: 11px; }
+    .captured.red { top: 160px; }
+    .captured.black { bottom: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div id="canvas-container"></div>
+
+<!-- Language switch -->
+<div class="lang-switch">
+  <button id="lang-zh" class="active">繁體</button>
+  <button id="lang-en">EN</button>
+</div>
+
+<!-- HUD -->
+<div class="hud title-bar">
+  <h1 data-i18n="title">天 球 象 棋</h1>
+  <div class="sub" data-i18n="subtitle">Sphere Xiangqi · Celestial Chess</div>
+</div>
+
+<div class="hud player-info red" id="player-red">
+  <div class="label" data-i18n="northPole">北 · NORTH POLE</div>
+  <div class="name" data-i18n="redSide">朱 方</div>
+  <div class="status" id="status-red" data-i18n="waiting">等待連線…</div>
+</div>
+
+<div class="hud player-info black" id="player-black">
+  <div class="label" data-i18n="southPole">南 · SOUTH POLE</div>
+  <div class="name" data-i18n="blackSide">玄 方</div>
+  <div class="status" id="status-black" data-i18n="waiting">等待連線…</div>
+</div>
+
+<div class="hud captured red" id="captured-red"></div>
+<div class="hud captured black" id="captured-black"></div>
+
+<div class="hud controls">
+  <button class="btn" id="btn-menu" data-i18n="menu">選 單</button>
+  <button class="btn" id="btn-reset" data-i18n="resetView">重 置 視 角</button>
+</div>
+
+<div class="hud info-bar">
+  <div class="hint-title" data-i18n="controlsTitle">操 作 指 引 · CONTROLS</div>
+  <div data-i18n="ctrlDrag">拖 曳 · 旋轉天球</div>
+  <div data-i18n="ctrlZoom">滾 輪 · 縮放視距</div>
+  <div data-i18n="ctrlClick">點 擊 棋 子 · 選取/走子</div>
+</div>
+
+<!-- Start Modal -->
+<div class="modal-overlay" id="start-modal">
+  <div class="modal">
+    <h2 data-i18n="title">天 球 象 棋</h2>
+    <div class="subtitle" data-i18n="tagline">A Game of Celestial Strategy</div>
+    <p data-i18n="intro">傳統中國象棋在一顆星球表面上演。兩位將帥分據<strong style="color:var(--gold)">南北兩極</strong>,楚河漢界化為<strong style="color:var(--gold)">赤道天河</strong>,棋子可沿經緯線環行天球。</p>
+    <div class="rules" data-i18n="rules">
+      <strong>⊹ 棋盤</strong>:經度 8 線、緯度 15 層,包裹成一整顆天球<br>
+      <strong>⊹ 兩極</strong>:朱方居北極,玄方居南極<br>
+      <strong>⊹ 赤道</strong>:楚河漢界,小卒過河可橫行<br>
+      <strong>⊹ 走法</strong>:沿用中國象棋,東西經線首尾相連<br>
+      <strong>⊹ 勝負</strong>:吃掉對方將/帥即勝
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btn-single" data-i18n="singlePlayer">雙 人 對 戰</button>
+      <button class="btn" id="btn-vs-ai" data-i18n="vsAI">人 機 對 戰</button>
+      <button class="btn" id="btn-ai-vs-ai" data-i18n="aiVsAi">AI 觀 戰</button>
+      <button class="btn" id="btn-create" data-i18n="createRoom">建 立 房 間</button>
+      <button class="btn" id="btn-join" data-i18n="joinRoom">加 入 房 間</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room Modal -->
+<div class="modal-overlay" id="room-modal" style="display:none;">
+  <div class="modal">
+    <h2 id="room-title" data-i18n="roomCreated">房 間 已 建 立</h2>
+    <div class="subtitle" data-i18n="shareLink">Share this link</div>
+    <p id="room-desc" data-i18n="roomDesc">將下方連結傳送給對手,對方加入後即可開始對戰。你執朱方(北極)。</p>
+    <div class="invite-box" id="invite-link">—</div>
+    <div class="copy-hint" data-i18n="copyHint">↑ 點擊複製連結</div>
+    <div class="status-line" id="room-status">
+      <span class="dot"></span><span data-i18n="waitingOpponent">等待對手加入…</span>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-back" data-i18n="back">返 回</button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Modal -->
+<div class="modal-overlay" id="join-modal" style="display:none;">
+  <div class="modal">
+    <h2 data-i18n="joinRoomTitle">加 入 房 間</h2>
+    <div class="subtitle" data-i18n="enterCode">Enter Room Code</div>
+    <p data-i18n="joinDesc">輸入朋友分享給你的房間碼,或直接開啟分享連結。</p>
+    <input type="text" id="join-code-input" data-i18n-placeholder="codePlaceholder" placeholder="例如: A7F3K9" style="
+      width:100%; padding:14px 18px; background:rgba(0,0,0,0.4);
+      border:1px solid var(--gold-dim); color:var(--ink);
+      font-family:monospace; font-size:16px; letter-spacing:0.3em;
+      text-align:center; text-transform:uppercase; margin:12px 0;
+      outline:none;
+    ">
+    <div class="actions">
+      <button class="btn" id="btn-join-back" data-i18n="back">返 回</button>
+      <button class="btn primary" id="btn-join-confirm" data-i18n="join">加 入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// =========================================================================
+// I18N — bilingual UI (Traditional Chinese / English)
+// =========================================================================
+const I18N = {
+  zh: {
+    title: '天 球 象 棋',
+    subtitle: 'Sphere Xiangqi · Celestial Chess',
+    tagline: 'A Game of Celestial Strategy',
+    northPole: '北 · NORTH POLE',
+    southPole: '南 · SOUTH POLE',
+    redSide: '朱 方',
+    blackSide: '玄 方',
+    waiting: '等待連線…',
+    menu: '選 單',
+    resetView: '重 置 視 角',
+    controlsTitle: '操 作 指 引 · CONTROLS',
+    ctrlDrag: '拖 曳 · 旋轉天球',
+    ctrlZoom: '滾 輪 · 縮放視距',
+    ctrlClick: '點 擊 棋 子 · 選取/走子',
+    intro: '傳統中國象棋在一顆星球表面上演。兩位將帥分據<strong style="color:var(--gold)">南北兩極</strong>,楚河漢界化為<strong style="color:var(--gold)">赤道天河</strong>,棋子可沿經緯線環行天球。',
+    rules: '<strong>⊹ 棋盤</strong>:經度 8 線、緯度 15 層,包裹成一整顆天球<br><strong>⊹ 兩極</strong>:朱方居北極,玄方居南極<br><strong>⊹ 赤道</strong>:楚河漢界,小卒過河可橫行<br><strong>⊹ 走法</strong>:沿用中國象棋,東西經線首尾相連<br><strong>⊹ 勝負</strong>:吃掉對方將/帥即勝',
+    singlePlayer: '雙 人 對 戰',
+    vsAI: '人 機 對 戰',
+    aiVsAi: 'AI 觀 戰',
+    createRoom: '建 立 房 間',
+    joinRoom: '加 入 房 間',
+    roomCreated: '房 間 已 建 立',
+    shareLink: 'Share this link',
+    roomDesc: '將下方連結傳送給對手,對方加入後即可開始對戰。你執朱方(北極)。',
+    copyHint: '↑ 點擊複製連結',
+    waitingOpponent: '等待對手加入…',
+    back: '返 回',
+    joinRoomTitle: '加 入 房 間',
+    enterCode: 'Enter Room Code',
+    joinDesc: '輸入朋友分享給你的房間碼,或直接開啟分享連結。',
+    codePlaceholder: '例如: A7F3K9',
+    join: '加 入',
+    thinking: '思考中…',
+    aiThinking: 'AI 運算中…',
+    waitingTurn: '等待對手',
+    modeOnline: '· 在線',
+    modeSingle: '· 單機',
+    victory: '勝 · VICTORY',
+    defeat: '敗 · DEFEAT',
+    redWin: '朱 方 勝',
+    blackWin: '玄 方 勝',
+    copied: '✓ 已複製!',
+    opponentJoined: '對手已加入 ✓',
+    roomNotFound: '房間不存在,請檢查房間碼',
+    joinFailed: '加入失敗',
+  },
+  en: {
+    title: 'S P H E R E   X I A N G Q I',
+    subtitle: 'Sphere Xiangqi · Celestial Chess',
+    tagline: 'A Game of Celestial Strategy',
+    northPole: 'N · NORTH POLE',
+    southPole: 'S · SOUTH POLE',
+    redSide: 'VERMILION',
+    blackSide: 'OBSIDIAN',
+    waiting: 'Waiting for connection…',
+    menu: 'MENU',
+    resetView: 'RESET VIEW',
+    controlsTitle: 'CONTROLS',
+    ctrlDrag: 'Drag · Rotate sphere',
+    ctrlZoom: 'Scroll · Zoom view',
+    ctrlClick: 'Tap piece · Select / Move',
+    intro: 'Traditional Chinese chess unfolds on the surface of a planet. The two generals stand at the <strong style="color:var(--gold)">north and south poles</strong>, the Chu-Han border becomes the <strong style="color:var(--gold)">celestial equator</strong>, and pieces can travel around the sphere along its meridians and parallels.',
+    rules: '<strong>⊹ BOARD</strong>: 8 meridians × 15 parallels wrapped into a sphere<br><strong>⊹ POLES</strong>: Vermilion holds the north, Obsidian holds the south<br><strong>⊹ EQUATOR</strong>: The river divide — pawns that cross may move sideways<br><strong>⊹ MOVES</strong>: Classic xiangqi rules; east and west meridians loop seamlessly<br><strong>⊹ VICTORY</strong>: Capture the opposing general to win',
+    singlePlayer: '2-PLAYER',
+    vsAI: 'VS AI',
+    aiVsAi: 'AI SPECTATE',
+    createRoom: 'CREATE ROOM',
+    joinRoom: 'JOIN ROOM',
+    roomCreated: 'ROOM CREATED',
+    shareLink: 'Share this link',
+    roomDesc: 'Send the link below to your opponent. The match begins when they join. You play Vermilion (North Pole).',
+    copyHint: '↑ Tap to copy link',
+    waitingOpponent: 'Waiting for opponent to join…',
+    back: 'BACK',
+    joinRoomTitle: 'JOIN ROOM',
+    enterCode: 'Enter Room Code',
+    joinDesc: 'Enter the room code your friend shared, or open the invite link directly.',
+    codePlaceholder: 'e.g. A7F3K9',
+    join: 'JOIN',
+    thinking: 'Thinking…',
+    aiThinking: 'AI computing…',
+    waitingTurn: "Opponent's turn",
+    modeOnline: '· Online',
+    modeSingle: '· Local',
+    victory: 'V I C T O R Y',
+    defeat: 'D E F E A T',
+    redWin: 'VERMILION WINS',
+    blackWin: 'OBSIDIAN WINS',
+    copied: '✓ Copied!',
+    opponentJoined: 'Opponent joined ✓',
+    roomNotFound: 'Room not found. Please check the code.',
+    joinFailed: 'Failed to join',
+  }
+};
+
+let currentLang = 'zh';
+
+function applyLang(lang) {
+  currentLang = lang;
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (dict[key] !== undefined) el.placeholder = dict[key];
+  });
+  document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+  document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  // Refresh dynamic HUD (statuses, captures, win banners if showing)
+  if (typeof updateHUD === 'function') updateHUD();
+}
+
+document.getElementById('lang-zh').onclick = () => applyLang('zh');
+document.getElementById('lang-en').onclick = () => applyLang('en');
+
+const t = (key) => I18N[currentLang][key] ?? key;
+
+// =========================================================================
+// SPHERE BOARD COORDINATES
+// Longitude: 8 meridians (0..7), wrap-around — chosen so pairs of pieces
+// (2 Rooks, 2 Horses, 2 Elephants, 2 Advisors) sit exactly opposite each other
+// on the ring around each pole (180° apart), mirroring classic xiangqi symmetry.
+// Latitude:  15 parallels (0..14), 0 = North Pole, 14 = South Pole
+//            7 = equator (Chu River / Han Border)
+// The extra latitudes (vs classic 10-row board) give every piece room to
+// perform its signature move on a sphere: advisor diagonals, elephant田,
+// horse 日, with empty lanes between the back ranks so nothing is blocked
+// from the opening move.
+// =========================================================================
+const LONGITUDES = 8;
+const LATITUDES = 15;
+const EQUATOR = 7;
+
+// =========================================================================
+// STARFIELD BACKGROUND
+// =========================================================================
+const starsCanvas = document.getElementById('stars');
+const starsCtx = starsCanvas.getContext('2d');
+let stars = [];
+function initStars() {
+  starsCanvas.width = window.innerWidth;
+  starsCanvas.height = window.innerHeight;
+  stars = [];
+  const count = Math.floor((window.innerWidth * window.innerHeight) / 4000);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * starsCanvas.width,
+      y: Math.random() * starsCanvas.height,
+      r: Math.random() * 1.2 + 0.2,
+      tw: Math.random() * Math.PI * 2,
+      twSpeed: Math.random() * 0.02 + 0.005,
+      hue: Math.random() < 0.85 ? 'rgba(255,240,220,' : (Math.random() < 0.5 ? 'rgba(255,180,150,' : 'rgba(180,200,255,')
+    });
+  }
+}
+function drawStars() {
+  starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+  for (const s of stars) {
+    s.tw += s.twSpeed;
+    const a = 0.3 + Math.abs(Math.sin(s.tw)) * 0.7;
+    starsCtx.fillStyle = s.hue + a + ')';
+    starsCtx.beginPath();
+    starsCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    starsCtx.fill();
+  }
+  requestAnimationFrame(drawStars);
+}
+initStars();
+drawStars();
+window.addEventListener('resize', initStars);
+
+// =========================================================================
+// THREE.JS SCENE
+// =========================================================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+camera.position.set(0, 0, 22);
+camera.lookAt(0, 0, 0);
+
+// Lights
+const ambient = new THREE.AmbientLight(0x443355, 0.6);
+scene.add(ambient);
+const keyLight = new THREE.DirectionalLight(0xffddaa, 1.2);
+keyLight.position.set(10, 8, 10);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x5577cc, 0.7);
+rimLight.position.set(-8, -4, -6);
+scene.add(rimLight);
+const fillRed = new THREE.PointLight(0xff4422, 0.8, 30);
+fillRed.position.set(0, 10, 0);
+scene.add(fillRed);
+const fillBlack = new THREE.PointLight(0x6688ff, 0.5, 30);
+fillBlack.position.set(0, -10, 0);
+scene.add(fillBlack);
+
+// Board group
+const boardGroup = new THREE.Group();
+scene.add(boardGroup);
+
+const SPHERE_R = 7.2;
+
+// Sphere surface (the planet)
+const sphereGeo = new THREE.SphereGeometry(SPHERE_R * 0.985, 64, 64);
+const sphereMat = new THREE.MeshPhongMaterial({
+  color: 0x2a1810,
+  emissive: 0x1a0a08,
+  shininess: 20,
+  specular: 0x553311,
+});
+const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+boardGroup.add(sphere);
+
+// Atmosphere glow
+const glowGeo = new THREE.SphereGeometry(SPHERE_R * 1.08, 32, 32);
+const glowMat = new THREE.ShaderMaterial({
+  uniforms: {},
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vPos;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vPos = (modelViewMatrix * vec4(position, 1.0)).xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    varying vec3 vPos;
+    void main() {
+      vec3 viewDir = normalize(-vPos);
+      float rim = 1.0 - abs(dot(viewDir, vNormal));
+      rim = pow(rim, 2.5);
+      vec3 c = mix(vec3(0.4, 0.15, 0.25), vec3(0.9, 0.6, 0.3), rim);
+      gl_FragColor = vec4(c, rim * 0.5);
+    }
+  `,
+  transparent: true,
+  side: THREE.BackSide,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const glow = new THREE.Mesh(glowGeo, glowMat);
+boardGroup.add(glow);
+
+// =========================================================================
+// BOARD COORDINATE -> 3D POSITION
+// lat 0 = north pole, lat 10 = south pole
+// =========================================================================
+function coordToPosition(lon, lat, radius = SPHERE_R) {
+  // lat goes from 0 (north) to LATITUDES-1 (south), polar angle 0..PI
+  const phi = (lat / (LATITUDES - 1)) * Math.PI;
+  // lon goes from 0 to LONGITUDES, wrapping around
+  const theta = (lon / LONGITUDES) * Math.PI * 2;
+  return new THREE.Vector3(
+    radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+// =========================================================================
+// GRID LINES ON SPHERE
+// =========================================================================
+function addGridLines() {
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xd4a84b, transparent: true, opacity: 0.35 });
+  const equatorMat = new THREE.LineBasicMaterial({ color: 0x4a9bc4, transparent: true, opacity: 0.7 });
+  const palaceMat = new THREE.LineBasicMaterial({ color: 0xe85a4f, transparent: true, opacity: 0.5 });
+
+  // Meridians (longitude lines) - full circles from pole to pole
+  for (let lon = 0; lon < LONGITUDES; lon++) {
+    const pts = [];
+    const segs = 80;
+    for (let i = 0; i <= segs; i++) {
+      const lat = (i / segs) * (LATITUDES - 1);
+      pts.push(coordToPosition(lon, lat, SPHERE_R * 0.995));
+    }
+    boardGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+  }
+
+  // Parallels (latitude lines)
+  for (let lat = 1; lat < LATITUDES - 1; lat++) {
+    const pts = [];
+    const segs = 120;
+    const mat = (lat === EQUATOR) ? equatorMat : lineMat;
+    for (let i = 0; i <= segs; i++) {
+      const lon = (i / segs) * LONGITUDES;
+      pts.push(coordToPosition(lon, lat, SPHERE_R * 0.995));
+    }
+    boardGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+
+  // Equator — thicker river band
+  const riverGeo = new THREE.CylinderGeometry(SPHERE_R * 1.002, SPHERE_R * 1.002, 0.4, 128, 1, true);
+  const riverMat = new THREE.MeshBasicMaterial({
+    color: 0x3888bb,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const river = new THREE.Mesh(riverGeo, riverMat);
+  boardGroup.add(river);
+
+  // Palace markers — a red/purple-tinted ring around each pole at lat=3,
+  // marking the boundary of the king's allowed territory.
+  function addPolePalace(isNorth) {
+    const lat = isNorth ? 3 : LATITUDES - 4;
+    const pts = [];
+    const segs = 120;
+    for (let i = 0; i <= segs; i++) {
+      const lon = (i / segs) * LONGITUDES;
+      pts.push(coordToPosition(lon, lat, SPHERE_R * 1.001));
+    }
+    const palaceRingMat = new THREE.LineBasicMaterial({
+      color: isNorth ? 0xe85a4f : 0xa080d0,
+      transparent: true,
+      opacity: 0.55,
+    });
+    boardGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), palaceRingMat));
+  }
+  addPolePalace(true);
+  addPolePalace(false);
+}
+addGridLines();
+
+// =========================================================================
+// INTERSECTION MARKERS (small dots at each playable coordinate)
+// =========================================================================
+const intersectionMarkers = [];
+function addIntersections() {
+  const dotGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  const dotMat = new THREE.MeshBasicMaterial({ color: 0xd4a84b, transparent: true, opacity: 0.4 });
+  for (let lat = 0; lat < LATITUDES; lat++) {
+    for (let lon = 0; lon < LONGITUDES; lon++) {
+      // Skip duplicate points at poles — at poles all longitudes collapse
+      if ((lat === 0 || lat === LATITUDES - 1) && lon !== 0) continue;
+      const dot = new THREE.Mesh(dotGeo, dotMat);
+      const pos = coordToPosition(lon, lat, SPHERE_R * 1.002);
+      dot.position.copy(pos);
+      dot.userData = { lon, lat };
+      boardGroup.add(dot);
+      intersectionMarkers.push(dot);
+    }
+  }
+}
+addIntersections();
+
+// =========================================================================
+// PIECES
+// =========================================================================
+/*
+  SYMMETRIC INITIAL LAYOUT (8 longitudes × 15 latitudes)
+  ======================================================
+  Every piece pair (2 Rooks, 2 Horses, 2 Elephants, 2 Advisors, 2 Cannons)
+  sits on DIAMETRICALLY OPPOSITE longitudes (180° apart).
+
+  Spacing is carefully designed so each piece can execute its signature
+  move from the opening position without being blocked:
+
+  North hemisphere (red):
+    lat 0 (pole)  : King (帥)
+    lat 1         : [empty — advisor's diagonal target]
+    lat 2         : Advisors (仕) at lon 0, 4
+    lat 3         : Rooks (車) at lon 3, 7  +  Horses (馬) at lon 1, 5
+    lat 4         : [empty — horse's "日" landing zone, elephant's "田" midpoint]
+    lat 5         : Elephants (相) at lon 2, 6
+    lat 6         : Cannons (炮) at lon 1, 5
+    lat 7         : EQUATOR (river)
+    Pawns go on lat 6 too — wait, cannon is there. Let me redo:
+
+  Revised:
+    lat 0  : King (pole)
+    lat 1  : empty
+    lat 2  : Advisors (lon 0, 4)
+    lat 3  : Horses (lon 1, 5), Rooks (lon 3, 7)
+    lat 4  : empty (horse-leg + elephant-田 midpoint)
+    lat 5  : Elephants (lon 2, 6), Cannons (lon 1, 5)  — cannons in front of horses
+    lat 6  : Pawns (lon 0, 2, 4, 6)
+    lat 7  : EQUATOR
+
+  Check signature moves from opening:
+    - Advisor (lat=2,lon=0) diagonals → (lat=1,lon=1/7) or (lat=3,lon=1/7) ✓ (lat=3 has a horse at lon=1, but it could capture own team blocked; diagonal to (lat=1, lon=1/7) is free ✓)
+    - Elephant (lat=5,lon=2) 田 → (lat=3,lon=0/4) or (lat=7,lon=0/4). Midpoint (lat=4,lon=1/3) is empty ✓
+    - Horse (lat=3,lon=1) 日 → e.g. (lat=1,lon=0/2) or (lat=5,lon=0/2) — leg at (lat=2,lon=1) empty ✓, (lat=4,lon=1) empty ✓
+    - Rook (lat=3,lon=3) slides along lat=3 ring or down meridian until hits cannon at lat=5? No cannon on lon=3, so it slides through lat=4 (empty) into deep territory ✓
+    - Cannon (lat=5,lon=1) can slide along lat=5 or meridian ✓
+    - Pawn (lat=6,lon=0) steps forward to lat=7 (equator) then can turn sideways after crossing ✓
+
+  Total per side: 1 + 2 + 2 + 2 + 2 + 2 + 4 = 15 pieces.
+*/
+
+const PIECE_NAMES = {
+  red:   { K: '帥', A: '仕', E: '相', H: '馬', R: '車', C: '炮', P: '兵' },
+  black: { K: '將', A: '士', E: '象', H: '馬', R: '車', C: '砲', P: '卒' }
+};
+
+// Initial layout generator — symmetric layout on 8-longitude rings with
+// breathing room between ranks so every piece can do its signature move.
+function initialLayout() {
+  const pieces = [];
+  let id = 0;
+
+  function addSide(side, isNorth) {
+    // Map a "depth" from the pole (1..N) to an actual latitude.
+    const poleLat = isNorth ? 0 : LATITUDES - 1;
+    const dir = isNorth ? 1 : -1;
+    const at = (d) => poleLat + dir * d;
+
+    // King on the pole
+    pieces.push({ id: id++, side, type: 'K', lon: 0, lat: at(0) });
+    // Advisors at depth 2, on longitudes 0 and 4 (opposite each other)
+    pieces.push({ id: id++, side, type: 'A', lon: 0, lat: at(2) });
+    pieces.push({ id: id++, side, type: 'A', lon: 4, lat: at(2) });
+    // Horses at depth 3, longitudes 1 and 5
+    pieces.push({ id: id++, side, type: 'H', lon: 1, lat: at(3) });
+    pieces.push({ id: id++, side, type: 'H', lon: 5, lat: at(3) });
+    // Rooks at depth 3, longitudes 3 and 7
+    pieces.push({ id: id++, side, type: 'R', lon: 3, lat: at(3) });
+    pieces.push({ id: id++, side, type: 'R', lon: 7, lat: at(3) });
+    // Elephants at depth 5, longitudes 2 and 6
+    pieces.push({ id: id++, side, type: 'E', lon: 2, lat: at(5) });
+    pieces.push({ id: id++, side, type: 'E', lon: 6, lat: at(5) });
+    // Cannons at depth 5, longitudes 1 and 5
+    pieces.push({ id: id++, side, type: 'C', lon: 1, lat: at(5) });
+    pieces.push({ id: id++, side, type: 'C', lon: 5, lat: at(5) });
+    // Pawns at depth 6, even longitudes
+    [0, 2, 4, 6].forEach(lon => {
+      pieces.push({ id: id++, side, type: 'P', lon, lat: at(6) });
+    });
+  }
+
+  addSide('red', true);
+  addSide('black', false);
+
+  return pieces;
+}
+
+// =========================================================================
+// 3D PIECE OBJECTS
+// =========================================================================
+function createPieceMesh(piece) {
+  const group = new THREE.Group();
+
+  // Disc base — sits tangent to sphere surface
+  const discGeo = new THREE.CylinderGeometry(0.35, 0.38, 0.18, 24);
+  const isRed = piece.side === 'red';
+  const discMat = new THREE.MeshPhongMaterial({
+    color: isRed ? 0xd4b080 : 0x2a2228,
+    emissive: isRed ? 0x3a1a0a : 0x050505,
+    shininess: 80,
+    specular: 0xffeecc,
+  });
+  const disc = new THREE.Mesh(discGeo, discMat);
+  group.add(disc);
+
+  // Inner ring accent
+  const ringGeo = new THREE.TorusGeometry(0.3, 0.02, 8, 32);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: isRed ? 0xc8322a : 0xd4a84b,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.1;
+  group.add(ring);
+
+  // Character label — use a canvas texture
+  const canvas = document.createElement('canvas');
+  canvas.width = 128; canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 128, 128);
+  ctx.fillStyle = isRed ? '#c8322a' : '#f5e6c8';
+  ctx.font = 'bold 88px "Noto Serif SC", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(PIECE_NAMES[piece.side][piece.type], 64, 68);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4;
+  const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+  const labelGeo = new THREE.PlaneGeometry(0.55, 0.55);
+  const label = new THREE.Mesh(labelGeo, labelMat);
+  label.position.y = 0.1;
+  label.rotation.x = -Math.PI / 2;
+  group.add(label);
+
+  // Selection indicator (hidden by default)
+  const selGeo = new THREE.TorusGeometry(0.48, 0.04, 8, 32);
+  const selMat = new THREE.MeshBasicMaterial({
+    color: 0xffdd44,
+    transparent: true,
+    opacity: 0,
+  });
+  const selection = new THREE.Mesh(selGeo, selMat);
+  selection.rotation.x = Math.PI / 2;
+  selection.position.y = 0.1;
+  group.add(selection);
+  group.userData.selection = selection;
+
+  group.userData.piece = piece;
+  return group;
+}
+
+function positionPieceMesh(mesh, lon, lat) {
+  const pos = coordToPosition(lon, lat, SPHERE_R);
+  mesh.position.copy(pos);
+  // Orient so the disc is tangent to sphere (its local +Y faces outward)
+  const normal = pos.clone().normalize();
+  const up = new THREE.Vector3(0, 1, 0);
+  const quat = new THREE.Quaternion();
+  quat.setFromUnitVectors(up, normal);
+  mesh.quaternion.copy(quat);
+  mesh.position.addScaledVector(normal, 0.09); // lift slightly
+}
+
+// =========================================================================
+// GAME STATE
+// =========================================================================
+let gameState = {
+  pieces: [],
+  turn: 'red',
+  selected: null,
+  captured: [],
+  mode: 'single',       // 'single' | 'online' | 'vs-ai' | 'ai-vs-ai'
+  mySide: 'red',
+  roomId: null,
+  gameOver: false,
+  aiSides: new Set(),   // which sides are controlled by AI
+  aiThinking: false,
+};
+
+const pieceMeshes = new Map();
+
+function initGame() {
+  // Clear existing meshes
+  for (const mesh of pieceMeshes.values()) {
+    boardGroup.remove(mesh);
+  }
+  pieceMeshes.clear();
+
+  gameState.pieces = initialLayout();
+  gameState.turn = 'red';
+  gameState.selected = null;
+  gameState.captured = [];
+  gameState.gameOver = false;
+
+  for (const p of gameState.pieces) {
+    const mesh = createPieceMesh(p);
+    positionPieceMesh(mesh, p.lon, p.lat);
+    boardGroup.add(mesh);
+    pieceMeshes.set(p.id, mesh);
+  }
+
+  updateHUD();
+  clearHighlights();
+}
+
+// =========================================================================
+// MOVE LOGIC — Sphere-adapted Xiangqi rules
+// Longitude wraps mod LONGITUDES. Latitude 0..LATITUDES-1, poles at 0 and last.
+// Equator at EQUATOR.
+// =========================================================================
+
+function pieceAt(lon, lat) {
+  lon = ((lon % LONGITUDES) + LONGITUDES) % LONGITUDES;
+  return gameState.pieces.find(p => {
+    if (p.lat === lat) {
+      // At poles, all lon collapse to same point
+      if (lat === 0 || lat === LATITUDES - 1) return true;
+      return p.lon === lon;
+    }
+    return false;
+  });
+}
+
+function normLon(lon) {
+  return ((lon % LONGITUDES) + LONGITUDES) % LONGITUDES;
+}
+
+// Determine if a coord is in the "own half" relative to side
+function isOwnHalf(side, lat) {
+  return side === 'red' ? lat < EQUATOR : lat > EQUATOR;
+}
+
+// Palace cells: polar cap — the 4 rows closest to each pole form the palace.
+// The king/advisors are restricted to this region, just like in classic xiangqi.
+// With 15 latitudes and advisors starting at depth 2, allowing depth 0..3
+// gives advisors a genuine diagonal range.
+function isInPalace(side, lon, lat) {
+  if (side === 'red') {
+    return lat <= 3;
+  } else {
+    return lat >= LATITUDES - 4;
+  }
+}
+
+// Get valid moves for a piece
+function validMoves(piece) {
+  const moves = [];
+  const { type, side, lon, lat } = piece;
+
+  const tryAdd = (tlon, tlat, canCapture = true, mustCapture = false) => {
+    if (tlat < 0 || tlat > LATITUDES - 1) return false;
+    const nl = normLon(tlon);
+    // At poles, all longitudes collapse. Normalize target lon to 0 when at pole.
+    const actualLon = (tlat === 0 || tlat === LATITUDES - 1) ? 0 : nl;
+    const target = pieceAt(actualLon, tlat);
+    if (target) {
+      if (target.side === side) return false; // blocked by own
+      if (!canCapture) return false;
+      moves.push({ lon: actualLon, lat: tlat, capture: true });
+      return 'capture';
+    } else {
+      if (mustCapture) return false;
+      moves.push({ lon: actualLon, lat: tlat, capture: false });
+      return true;
+    }
+  };
+
+  if (type === 'K') {
+    // King: move 1 step along meridian or parallel, must stay in palace
+    const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+    for (const [dl, dla] of dirs) {
+      const tl = normLon(lon + dl);
+      const tla = lat + dla;
+      if (tla < 0 || tla > LATITUDES - 1) continue;
+      if (!isInPalace(side, tl, tla)) continue;
+      const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : tl;
+      const target = pieceAt(actualLon, tla);
+      if (target && target.side === side) continue;
+      moves.push({ lon: actualLon, lat: tla, capture: !!target });
+    }
+    // Flying general: if two kings face on same meridian with nothing between
+    const otherK = gameState.pieces.find(p => p.type === 'K' && p.side !== side);
+    if (otherK) {
+      // They face each other if at the poles? Both at poles means same meridian trivially.
+      // But normally it's two kings on same lon with clear path.
+      // In our setup both start at poles — always "facing". But the "flying general"
+      // rule means a king can capture the other if no piece blocks the path.
+      // Check path along all meridians? Simpler: check lon=this piece's lon
+      // Actually since kings can be anywhere in palace, check if same lon
+      if (lat === 0 || lat === LATITUDES - 1 || otherK.lat === 0 || otherK.lat === LATITUDES - 1 || lon === otherK.lon) {
+        // Check path along meridian from this king to other king
+        // Need to pick which longitude to walk if one is at pole
+        const walkLon = (lat === 0 || lat === LATITUDES - 1) ? otherK.lon : lon;
+        let blocked = false;
+        const [fromLat, toLat] = lat < otherK.lat ? [lat, otherK.lat] : [otherK.lat, lat];
+        for (let l = fromLat + 1; l < toLat; l++) {
+          const actualLon = (l === 0 || l === LATITUDES - 1) ? 0 : walkLon;
+          if (pieceAt(actualLon, l)) { blocked = true; break; }
+        }
+        if (!blocked) {
+          moves.push({ lon: otherK.lon, lat: otherK.lat, capture: true, special: 'flying' });
+        }
+      }
+    }
+  }
+  else if (type === 'A') {
+    // Advisor: 1 step diagonal, stay in palace
+    const dirs = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    for (const [dl, dla] of dirs) {
+      const tl = normLon(lon + dl);
+      const tla = lat + dla;
+      if (tla < 0 || tla > LATITUDES - 1) continue;
+      if (!isInPalace(side, tl, tla)) continue;
+      const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : tl;
+      const target = pieceAt(actualLon, tla);
+      if (target && target.side === side) continue;
+      moves.push({ lon: actualLon, lat: tla, capture: !!target });
+    }
+  }
+  else if (type === 'E') {
+    // Elephant: 2-step diagonal, can't cross equator (river)
+    const dirs = [[-2, -2], [-2, 2], [2, -2], [2, 2]];
+    for (const [dl, dla] of dirs) {
+      const tl = normLon(lon + dl);
+      const tla = lat + dla;
+      if (tla < 0 || tla > LATITUDES - 1) continue;
+      // Can't cross equator
+      if (side === 'red' && tla >= EQUATOR) continue;
+      if (side === 'black' && tla <= EQUATOR) continue;
+      // Blocking: midpoint must be empty
+      const midL = normLon(lon + dl / 2);
+      const midLa = lat + dla / 2;
+      const midActualLon = (midLa === 0 || midLa === LATITUDES - 1) ? 0 : midL;
+      if (pieceAt(midActualLon, midLa)) continue;
+      const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : tl;
+      const target = pieceAt(actualLon, tla);
+      if (target && target.side === side) continue;
+      moves.push({ lon: actualLon, lat: tla, capture: !!target });
+    }
+  }
+  else if (type === 'H') {
+    // Horse: L-shape, blocked by adjacent piece (horse's leg)
+    // 8 moves: (±2, ±1) and (±1, ±2)
+    const moves8 = [
+      [2, 1], [2, -1], [-2, 1], [-2, -1],
+      [1, 2], [1, -2], [-1, 2], [-1, -2],
+    ];
+    for (const [dl, dla] of moves8) {
+      const tl = normLon(lon + dl);
+      const tla = lat + dla;
+      if (tla < 0 || tla > LATITUDES - 1) continue;
+      // Blocking leg: if |dl|==2, leg is at (lon+dl/2, lat)
+      //               if |dla|==2, leg is at (lon, lat+dla/2)
+      let legL, legLa;
+      if (Math.abs(dl) === 2) { legL = normLon(lon + dl / 2); legLa = lat; }
+      else { legL = lon; legLa = lat + dla / 2; }
+      const legActualLon = (legLa === 0 || legLa === LATITUDES - 1) ? 0 : legL;
+      if (pieceAt(legActualLon, legLa)) continue;
+      const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : tl;
+      const target = pieceAt(actualLon, tla);
+      if (target && target.side === side) continue;
+      moves.push({ lon: actualLon, lat: tla, capture: !!target });
+    }
+  }
+  else if (type === 'R') {
+    // Rook: slide along meridian (lat) or parallel (lon, wraps)
+    // Along lat (vertical)
+    for (const dir of [-1, 1]) {
+      let tla = lat + dir;
+      while (tla >= 0 && tla <= LATITUDES - 1) {
+        const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : lon;
+        const target = pieceAt(actualLon, tla);
+        if (target) {
+          if (target.side !== side) moves.push({ lon: actualLon, lat: tla, capture: true });
+          break;
+        }
+        moves.push({ lon: actualLon, lat: tla, capture: false });
+        // At pole, can't go further
+        if (tla === 0 || tla === LATITUDES - 1) break;
+        tla += dir;
+      }
+    }
+    // Along lon (horizontal, wraps)
+    // At a pole, can't move along lon (it's a single point)
+    if (lat !== 0 && lat !== LATITUDES - 1) {
+      for (const dir of [-1, 1]) {
+        for (let step = 1; step < LONGITUDES; step++) {
+          const tl = normLon(lon + dir * step);
+          const target = pieceAt(tl, lat);
+          if (target) {
+            if (target.side !== side) moves.push({ lon: tl, lat, capture: true });
+            break;
+          }
+          moves.push({ lon: tl, lat, capture: false });
+        }
+      }
+    }
+  }
+  else if (type === 'C') {
+    // Cannon: move like rook without capture; capture requires exactly one jump
+    // Along lat
+    for (const dir of [-1, 1]) {
+      let tla = lat + dir;
+      let jumped = false;
+      while (tla >= 0 && tla <= LATITUDES - 1) {
+        const actualLon = (tla === 0 || tla === LATITUDES - 1) ? 0 : lon;
+        const target = pieceAt(actualLon, tla);
+        if (!jumped) {
+          if (target) { jumped = true; }
+          else moves.push({ lon: actualLon, lat: tla, capture: false });
+        } else {
+          if (target) {
+            if (target.side !== side) moves.push({ lon: actualLon, lat: tla, capture: true });
+            break;
+          }
+        }
+        if (tla === 0 || tla === LATITUDES - 1) break;
+        tla += dir;
+      }
+    }
+    // Along lon
+    if (lat !== 0 && lat !== LATITUDES - 1) {
+      for (const dir of [-1, 1]) {
+        let jumped = false;
+        for (let step = 1; step < LONGITUDES; step++) {
+          const tl = normLon(lon + dir * step);
+          const target = pieceAt(tl, lat);
+          if (!jumped) {
+            if (target) { jumped = true; }
+            else moves.push({ lon: tl, lat, capture: false });
+          } else {
+            if (target) {
+              if (target.side !== side) moves.push({ lon: tl, lat, capture: true });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  else if (type === 'P') {
+    // Pawn: toward opponent; after crossing equator can move along parallel too
+    const forward = side === 'red' ? 1 : -1;
+    const hasCrossed = side === 'red' ? lat >= EQUATOR : lat <= EQUATOR;
+    // Forward
+    const ftl = lon;
+    const ftla = lat + forward;
+    if (ftla >= 0 && ftla <= LATITUDES - 1) {
+      const actualLon = (ftla === 0 || ftla === LATITUDES - 1) ? 0 : ftl;
+      const target = pieceAt(actualLon, ftla);
+      if (!target || target.side !== side) {
+        moves.push({ lon: actualLon, lat: ftla, capture: !!target });
+      }
+    }
+    // Sideways after crossing
+    if (hasCrossed && lat !== 0 && lat !== LATITUDES - 1) {
+      for (const dir of [-1, 1]) {
+        const tl = normLon(lon + dir);
+        const target = pieceAt(tl, lat);
+        if (!target || target.side !== side) {
+          moves.push({ lon: tl, lat, capture: !!target });
+        }
+      }
+    }
+  }
+
+  return moves;
+}
+
+// =========================================================================
+// HIGHLIGHTS
+// =========================================================================
+const highlightMeshes = [];
+function clearHighlights() {
+  for (const m of highlightMeshes) boardGroup.remove(m);
+  highlightMeshes.length = 0;
+  for (const mesh of pieceMeshes.values()) {
+    if (mesh.userData.selection) mesh.userData.selection.material.opacity = 0;
+  }
+}
+
+function showMoveHighlights(moves) {
+  for (const mv of moves) {
+    const geo = mv.capture
+      ? new THREE.RingGeometry(0.35, 0.48, 32)
+      : new THREE.CircleGeometry(0.22, 24);
+    const mat = new THREE.MeshBasicMaterial({
+      color: mv.capture ? 0xff5540 : 0x44ff88,
+      transparent: true,
+      opacity: mv.capture ? 0.85 : 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const hl = new THREE.Mesh(geo, mat);
+    const pos = coordToPosition(mv.lon, mv.lat, SPHERE_R);
+    hl.position.copy(pos);
+    const normal = pos.clone().normalize();
+    const up = new THREE.Vector3(0, 0, 1);
+    const quat = new THREE.Quaternion();
+    quat.setFromUnitVectors(up, normal);
+    hl.quaternion.copy(quat);
+    hl.position.addScaledVector(normal, 0.08);
+    hl.userData.moveTarget = mv;
+    boardGroup.add(hl);
+    highlightMeshes.push(hl);
+  }
+}
+
+// =========================================================================
+// INTERACTION (raycaster + orbit)
+// =========================================================================
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let dragMoved = false;
+let rotation = { x: 0.2, y: 0 };
+let rotationVel = { x: 0, y: 0 };
+const DAMPING = 0.92;
+
+const canvas = renderer.domElement;
+
+canvas.addEventListener('pointerdown', (e) => {
+  isDragging = true;
+  dragMoved = false;
+  dragStart.x = e.clientX;
+  dragStart.y = e.clientY;
+  rotationVel.x = 0;
+  rotationVel.y = 0;
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (isDragging) {
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved = true;
+    rotationVel.y = dx * 0.005;
+    rotationVel.x = dy * 0.005;
+    rotation.y += rotationVel.y;
+    rotation.x += rotationVel.x;
+    rotation.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, rotation.x));
+    dragStart.x = e.clientX;
+    dragStart.y = e.clientY;
+  }
+});
+
+canvas.addEventListener('pointerup', (e) => {
+  isDragging = false;
+  if (!dragMoved) {
+    handleClick(e);
+  }
+});
+canvas.addEventListener('pointerleave', () => { isDragging = false; });
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  camera.position.z += e.deltaY * 0.01;
+  camera.position.z = Math.max(11, Math.min(36, camera.position.z));
+}, { passive: false });
+
+// Pinch zoom (touch)
+let pinchStartDist = 0;
+let pinchStartZ = 0;
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    pinchStartDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+    pinchStartZ = camera.position.z;
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+    if (pinchStartDist > 0) {
+      camera.position.z = Math.max(11, Math.min(36, pinchStartZ * (pinchStartDist / d)));
+    }
+    e.preventDefault();
+  }
+}, { passive: false });
+
+function handleClick(e) {
+  if (gameState.gameOver) return;
+  if (gameState.aiThinking) return;
+  if (gameState.aiSides.has(gameState.turn)) return;
+  if (gameState.mode === 'online' && gameState.turn !== gameState.mySide) return;
+
+  const rect = canvas.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  // First check highlight (move target) hits
+  const hlHits = raycaster.intersectObjects(highlightMeshes, true);
+  if (hlHits.length > 0 && gameState.selected) {
+    const mv = hlHits[0].object.userData.moveTarget;
+    executeMove(gameState.selected, mv);
+    return;
+  }
+
+  // Check piece hits
+  const pieceObjs = Array.from(pieceMeshes.values());
+  const pieceHits = raycaster.intersectObjects(pieceObjs, true);
+  if (pieceHits.length > 0) {
+    let obj = pieceHits[0].object;
+    while (obj && !obj.userData.piece) obj = obj.parent;
+    if (obj) {
+      const piece = obj.userData.piece;
+      if (piece.side === gameState.turn) {
+        selectPiece(piece);
+      } else if (gameState.selected) {
+        // Try capture
+        const moves = validMoves(gameState.selected);
+        const mv = moves.find(m => m.lat === piece.lat && m.lon === piece.lon);
+        if (mv) executeMove(gameState.selected, mv);
+      }
+    }
+  } else {
+    clearHighlights();
+    gameState.selected = null;
+  }
+}
+
+function selectPiece(piece) {
+  clearHighlights();
+  gameState.selected = piece;
+  const mesh = pieceMeshes.get(piece.id);
+  if (mesh && mesh.userData.selection) {
+    mesh.userData.selection.material.opacity = 1;
+  }
+  const moves = validMoves(piece);
+  showMoveHighlights(moves);
+}
+
+function executeMove(piece, mv) {
+  // Handle capture
+  const target = pieceAt(mv.lon, mv.lat);
+  if (target && target.side !== piece.side) {
+    gameState.captured.push(target);
+    gameState.pieces = gameState.pieces.filter(p => p.id !== target.id);
+    const tm = pieceMeshes.get(target.id);
+    if (tm) {
+      // Capture animation
+      animateCapture(tm, () => boardGroup.remove(tm));
+      pieceMeshes.delete(target.id);
+    }
+    if (target.type === 'K') {
+      gameState.gameOver = true;
+      setTimeout(() => showWinToast(piece.side), 600);
+    }
+  }
+
+  // Move piece
+  const mesh = pieceMeshes.get(piece.id);
+  const fromPos = mesh.position.clone();
+  piece.lon = mv.lon;
+  piece.lat = mv.lat;
+  const toPos = coordToPosition(mv.lon, mv.lat, SPHERE_R);
+  animateMove(mesh, fromPos, toPos, () => {
+    positionPieceMesh(mesh, mv.lon, mv.lat);
+  });
+
+  gameState.selected = null;
+  clearHighlights();
+
+  if (!gameState.gameOver) {
+    gameState.turn = gameState.turn === 'red' ? 'black' : 'red';
+  }
+  updateHUD();
+
+  if (gameState.mode === 'online') {
+    syncState();
+  }
+
+  // If next turn belongs to an AI, schedule its move
+  maybeTriggerAI();
+}
+
+// =========================================================================
+// AI ENGINE — minimax + alpha-beta pruning
+// =========================================================================
+const PIECE_VALUE = { K: 100000, R: 900, C: 450, H: 400, E: 200, A: 200, P: 100 };
+
+// Lightweight clone of game pieces for search
+function clonePieces(pieces) {
+  return pieces.map(p => ({ id: p.id, side: p.side, type: p.type, lon: p.lon, lat: p.lat }));
+}
+
+// Apply a move to a pieces-array (returns new array + captured piece if any)
+function applyMoveToArray(pieces, piece, mv) {
+  const next = [];
+  let captured = null;
+  for (const p of pieces) {
+    if (p.id === piece.id) {
+      next.push({ ...p, lon: mv.lon, lat: mv.lat });
+    } else if (p.lat === mv.lat &&
+               ((mv.lat === 0 || mv.lat === LATITUDES - 1) || p.lon === mv.lon) &&
+               p.side !== piece.side) {
+      captured = p; // skip — captured
+    } else {
+      next.push(p);
+    }
+  }
+  return { pieces: next, captured };
+}
+
+// A version of validMoves that reads from an arbitrary pieces array
+// (we temporarily swap gameState.pieces to reuse existing logic).
+function movesFor(piecesArr, piece) {
+  const backup = gameState.pieces;
+  gameState.pieces = piecesArr;
+  const moves = validMoves(piece);
+  gameState.pieces = backup;
+  return moves;
+}
+
+// Generate every legal move for a side, as [{piece, mv}, ...]
+function generateAllMoves(piecesArr, side) {
+  const all = [];
+  for (const p of piecesArr) {
+    if (p.side !== side) continue;
+    const moves = movesFor(piecesArr, p);
+    for (const mv of moves) {
+      all.push({ piece: p, mv });
+    }
+  }
+  return all;
+}
+
+// Positional bonus: incentivize pushing pieces towards opponent hemisphere
+function positionalBonus(p) {
+  // Distance from own pole (larger = more advanced)
+  const ownPoleLat = p.side === 'red' ? 0 : LATITUDES - 1;
+  const dist = Math.abs(p.lat - ownPoleLat);
+  let bonus = 0;
+  if (p.type === 'P') {
+    // Pawn gets much more value as it advances
+    bonus = dist * 8;
+    // Huge bonus after crossing river
+    const crossed = p.side === 'red' ? p.lat > EQUATOR : p.lat < EQUATOR;
+    if (crossed) bonus += 60;
+  } else if (p.type === 'R' || p.type === 'C' || p.type === 'H') {
+    bonus = dist * 2;
+  }
+  return bonus;
+}
+
+// Static evaluation — positive favors RED, negative favors BLACK
+function evaluate(piecesArr) {
+  let score = 0;
+  let redKing = false, blackKing = false;
+  for (const p of piecesArr) {
+    const v = PIECE_VALUE[p.type] + positionalBonus(p);
+    score += (p.side === 'red' ? v : -v);
+    if (p.type === 'K') {
+      if (p.side === 'red') redKing = true;
+      else blackKing = true;
+    }
+  }
+  // Terminal states
+  if (!redKing) return -999999;
+  if (!blackKing) return 999999;
+  return score;
+}
+
+function isGameOver(piecesArr) {
+  let redK = false, blackK = false;
+  for (const p of piecesArr) {
+    if (p.type === 'K') {
+      if (p.side === 'red') redK = true;
+      else blackK = true;
+    }
+  }
+  return !redK || !blackK;
+}
+
+// Minimax with alpha-beta pruning
+// side 'red' is maximizing, 'black' is minimizing
+function minimax(piecesArr, depth, alpha, beta, maximizing) {
+  if (depth === 0 || isGameOver(piecesArr)) {
+    return { score: evaluate(piecesArr), move: null };
+  }
+  const side = maximizing ? 'red' : 'black';
+  let moves = generateAllMoves(piecesArr, side);
+  if (moves.length === 0) {
+    return { score: evaluate(piecesArr), move: null };
+  }
+
+  // Move ordering: prioritize captures (simple heuristic)
+  moves.sort((a, b) => (b.mv.capture ? 1 : 0) - (a.mv.capture ? 1 : 0));
+
+  let bestMove = null;
+  if (maximizing) {
+    let best = -Infinity;
+    for (const m of moves) {
+      const { pieces: nextPieces } = applyMoveToArray(piecesArr, m.piece, m.mv);
+      const res = minimax(nextPieces, depth - 1, alpha, beta, false);
+      if (res.score > best) { best = res.score; bestMove = m; }
+      alpha = Math.max(alpha, best);
+      if (beta <= alpha) break;
+    }
+    return { score: best, move: bestMove };
+  } else {
+    let best = Infinity;
+    for (const m of moves) {
+      const { pieces: nextPieces } = applyMoveToArray(piecesArr, m.piece, m.mv);
+      const res = minimax(nextPieces, depth - 1, alpha, beta, true);
+      if (res.score < best) { best = res.score; bestMove = m; }
+      beta = Math.min(beta, best);
+      if (beta <= alpha) break;
+    }
+    return { score: best, move: bestMove };
+  }
+}
+
+function findBestMove(side, depth = 3) {
+  const snapshot = clonePieces(gameState.pieces);
+  const maximizing = side === 'red';
+  const result = minimax(snapshot, depth, -Infinity, Infinity, maximizing);
+  if (!result.move) return null;
+  // Map the cloned piece back to the real one (by id)
+  const realPiece = gameState.pieces.find(p => p.id === result.move.piece.id);
+  return { piece: realPiece, mv: result.move.mv };
+}
+
+// Schedule AI to move if it's an AI side's turn
+function maybeTriggerAI() {
+  if (gameState.gameOver) return;
+  if (!gameState.aiSides.has(gameState.turn)) return;
+  if (gameState.aiThinking) return;
+  gameState.aiThinking = true;
+  updateHUD();
+  // Use setTimeout so the UI can redraw and show "AI thinking…"
+  // Also gives a natural feel vs instant move.
+  setTimeout(() => {
+    try {
+      const best = findBestMove(gameState.turn, 3);
+      gameState.aiThinking = false;
+      if (best && best.piece) {
+        executeMove(best.piece, best.mv);
+      } else {
+        // no moves — game over by stalemate
+        gameState.gameOver = true;
+        updateHUD();
+      }
+    } catch (err) {
+      console.error('AI error:', err);
+      gameState.aiThinking = false;
+      updateHUD();
+    }
+  }, 400);
+}
+
+// Move animation: arc along great circle
+function animateMove(mesh, fromPos, toPos, done) {
+  const duration = 400;
+  const start = performance.now();
+  const lift = 1.0;
+  const fromNorm = fromPos.clone().normalize();
+  const toNorm = toPos.clone().normalize();
+  const fromLen = fromPos.length();
+  const toLen = toPos.length();
+
+  function step(t) {
+    const e = Math.min(1, (t - start) / duration);
+    const eased = e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
+    // Slerp direction
+    const dir = new THREE.Vector3().copy(fromNorm).lerp(toNorm, eased).normalize();
+    const arc = Math.sin(eased * Math.PI) * lift;
+    const len = fromLen + (toLen - fromLen) * eased + arc;
+    mesh.position.copy(dir).multiplyScalar(len);
+    // Orient
+    const up = new THREE.Vector3(0, 1, 0);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, dir);
+    mesh.quaternion.copy(q);
+
+    if (e < 1) requestAnimationFrame(step);
+    else done();
+  }
+  requestAnimationFrame(step);
+}
+
+function animateCapture(mesh, done) {
+  const duration = 500;
+  const start = performance.now();
+  const startScale = mesh.scale.clone();
+  const startPos = mesh.position.clone();
+  const normal = startPos.clone().normalize();
+
+  function step(t) {
+    const e = Math.min(1, (t - start) / duration);
+    mesh.scale.setScalar(1 - e);
+    mesh.position.copy(startPos).addScaledVector(normal, e * 2);
+    mesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.2);
+    if (e < 1) requestAnimationFrame(step);
+    else done();
+  }
+  requestAnimationFrame(step);
+}
+
+// =========================================================================
+// HUD UPDATE
+// =========================================================================
+function updateHUD() {
+  const redInfo = document.getElementById('player-red');
+  const blackInfo = document.getElementById('player-black');
+  const statusRed = document.getElementById('status-red');
+  const statusBlack = document.getElementById('status-black');
+
+  redInfo.classList.toggle('active', gameState.turn === 'red' && !gameState.gameOver);
+  blackInfo.classList.toggle('active', gameState.turn === 'black' && !gameState.gameOver);
+
+  const modeTxt = gameState.mode === 'online' ? t('modeOnline') : t('modeSingle');
+  if (gameState.gameOver) {
+    const winner = gameState.turn;
+    statusRed.textContent = winner === 'red' ? t('victory') : t('defeat');
+    statusBlack.textContent = winner === 'black' ? t('victory') : t('defeat');
+  } else {
+    const redIsAI = gameState.aiSides.has('red');
+    const blackIsAI = gameState.aiSides.has('black');
+    const redThinking = gameState.turn === 'red' && (gameState.aiThinking && redIsAI);
+    const blackThinking = gameState.turn === 'black' && (gameState.aiThinking && blackIsAI);
+    statusRed.textContent =
+      gameState.turn === 'red'
+        ? (redIsAI ? t('aiThinking') : t('thinking')) + ' ' + modeTxt
+        : t('waitingTurn') + ' ' + modeTxt;
+    statusBlack.textContent =
+      gameState.turn === 'black'
+        ? (blackIsAI ? t('aiThinking') : t('thinking')) + ' ' + modeTxt
+        : t('waitingTurn') + ' ' + modeTxt;
+  }
+
+  // Update captured pieces display
+  const capRed = document.getElementById('captured-red');
+  const capBlack = document.getElementById('captured-black');
+  capRed.innerHTML = '';
+  capBlack.innerHTML = '';
+  for (const p of gameState.captured) {
+    const el = document.createElement('div');
+    el.className = 'piece-icon ' + p.side;
+    el.textContent = PIECE_NAMES[p.side][p.type];
+    if (p.side === 'red') capBlack.appendChild(el);
+    else capRed.appendChild(el);
+  }
+}
+
+function showWinToast(winner) {
+  const toastEl = document.getElementById('toast');
+  const isMyWin = (gameState.mode === 'single') ? true : (winner === gameState.mySide);
+  toastEl.className = 'toast show ' + (isMyWin && gameState.mode === 'online' ? 'win' : (gameState.mode === 'single' ? 'win' : 'lose'));
+  toastEl.textContent = winner === 'red' ? t('redWin') : t('blackWin');
+  setTimeout(() => toastEl.classList.remove('show'), 3500);
+}
+
+// =========================================================================
+// ONLINE SYNC (storage API based simple matching)
+// =========================================================================
+async function syncState() {
+  if (!gameState.roomId) return;
+  const snapshot = {
+    pieces: gameState.pieces,
+    turn: gameState.turn,
+    captured: gameState.captured,
+    gameOver: gameState.gameOver,
+    lastUpdate: Date.now(),
+  };
+  try {
+    await window.storage.set(`room:${gameState.roomId}`, JSON.stringify(snapshot), true);
+  } catch (err) {
+    console.error('sync failed:', err);
+  }
+}
+
+let pollTimer = null;
+async function pollState() {
+  if (!gameState.roomId) return;
+  try {
+    const result = await window.storage.get(`room:${gameState.roomId}`, true);
+    if (result) {
+      const snap = JSON.parse(result.value);
+      // Only apply if it's from opponent (turn differs from what we sent last)
+      // Simplest: if turn !== mySide and differs from local, update
+      const localLastPieceCount = gameState.pieces.length;
+      if (snap.pieces.length !== localLastPieceCount || snap.turn !== gameState.turn) {
+        applyRemoteState(snap);
+      }
+    }
+  } catch (err) {
+    // no state yet
+  }
+}
+
+function applyRemoteState(snap) {
+  // Remove all current piece meshes
+  for (const mesh of pieceMeshes.values()) boardGroup.remove(mesh);
+  pieceMeshes.clear();
+
+  gameState.pieces = snap.pieces;
+  gameState.turn = snap.turn;
+  gameState.captured = snap.captured;
+  gameState.gameOver = snap.gameOver;
+
+  for (const p of gameState.pieces) {
+    const mesh = createPieceMesh(p);
+    positionPieceMesh(mesh, p.lon, p.lat);
+    boardGroup.add(mesh);
+    pieceMeshes.set(p.id, mesh);
+  }
+  clearHighlights();
+  updateHUD();
+
+  if (gameState.gameOver) {
+    showWinToast(snap.turn);
+  }
+}
+
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollState, 1500);
+}
+
+// =========================================================================
+// MENU / ROOM FLOW
+// =========================================================================
+const startModal = document.getElementById('start-modal');
+const roomModal = document.getElementById('room-modal');
+const joinModal = document.getElementById('join-modal');
+
+document.getElementById('btn-single').onclick = () => {
+  gameState.mode = 'single';
+  gameState.mySide = 'red';
+  gameState.aiSides = new Set();
+  startModal.style.display = 'none';
+  initGame();
+};
+
+document.getElementById('btn-vs-ai').onclick = () => {
+  gameState.mode = 'vs-ai';
+  gameState.mySide = 'red';       // Human plays red (north pole)
+  gameState.aiSides = new Set(['black']);
+  startModal.style.display = 'none';
+  initGame();
+};
+
+document.getElementById('btn-ai-vs-ai').onclick = () => {
+  gameState.mode = 'ai-vs-ai';
+  gameState.aiSides = new Set(['red', 'black']);
+  startModal.style.display = 'none';
+  initGame();
+  maybeTriggerAI(); // kick off the first AI move
+};
+
+document.getElementById('btn-create').onclick = async () => {
+  const roomId = Math.random().toString(36).slice(2, 8).toUpperCase();
+  gameState.mode = 'online';
+  gameState.mySide = 'red';
+  gameState.roomId = roomId;
+  gameState.aiSides = new Set();
+
+  startModal.style.display = 'none';
+  roomModal.style.display = 'flex';
+
+  const url = window.location.href.split('?')[0].split('#')[0] + '#' + roomId;
+  const inviteEl = document.getElementById('invite-link');
+  inviteEl.textContent = url;
+  inviteEl.onclick = () => {
+    navigator.clipboard?.writeText(url);
+    inviteEl.textContent = '✓ 已复制!';
+    setTimeout(() => { inviteEl.textContent = url; }, 1500);
+  };
+
+  initGame();
+  await syncState();
+  startPolling();
+
+  // Watch for opponent to join: they'll write a "joined" flag
+  const joinWatcher = setInterval(async () => {
+    try {
+      const r = await window.storage.get(`room:${roomId}:joined`, true);
+      if (r) {
+        clearInterval(joinWatcher);
+        roomModal.style.display = 'none';
+        document.getElementById('room-status').innerHTML = '对手已加入 ✓';
+      }
+    } catch (e) {}
+  }, 1200);
+};
+
+document.getElementById('btn-join').onclick = () => {
+  startModal.style.display = 'none';
+  joinModal.style.display = 'flex';
+};
+
+document.getElementById('btn-join-back').onclick = () => {
+  joinModal.style.display = 'none';
+  startModal.style.display = 'flex';
+};
+
+document.getElementById('btn-back').onclick = () => {
+  roomModal.style.display = 'none';
+  startModal.style.display = 'flex';
+  gameState.roomId = null;
+  if (pollTimer) clearInterval(pollTimer);
+};
+
+document.getElementById('btn-join-confirm').onclick = async () => {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code) return;
+  await joinRoom(code);
+};
+
+async function joinRoom(roomId) {
+  try {
+    const r = await window.storage.get(`room:${roomId}`, true);
+    if (!r) {
+      alert(t('roomNotFound'));
+      return;
+    }
+    gameState.mode = 'online';
+    gameState.mySide = 'black';
+    gameState.roomId = roomId;
+    gameState.aiSides = new Set();
+    joinModal.style.display = 'none';
+    startModal.style.display = 'none';
+
+    // Orient view to south pole for black player
+    rotation.x = -Math.PI / 2 + 0.3;
+
+    // Signal joined
+    await window.storage.set(`room:${roomId}:joined`, JSON.stringify({ at: Date.now() }), true);
+
+    const snap = JSON.parse(r.value);
+    applyRemoteState(snap);
+    startPolling();
+  } catch (err) {
+    alert(t('joinFailed') + ': ' + err.message);
+  }
+}
+
+// Auto-join from URL hash
+if (window.location.hash.length > 1) {
+  const roomId = window.location.hash.slice(1).toUpperCase();
+  startModal.style.display = 'none';
+  setTimeout(() => joinRoom(roomId), 100);
+}
+
+document.getElementById('btn-menu').onclick = () => {
+  startModal.style.display = 'flex';
+  if (pollTimer) clearInterval(pollTimer);
+};
+document.getElementById('btn-reset').onclick = () => {
+  rotation.x = 0.2; rotation.y = 0;
+  camera.position.z = 22;
+};
+
+// =========================================================================
+// RENDER LOOP
+// =========================================================================
+function animate() {
+  requestAnimationFrame(animate);
+  if (!isDragging) {
+    rotation.x += rotationVel.x;
+    rotation.y += rotationVel.y;
+    rotation.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, rotation.x));
+    rotationVel.x *= DAMPING;
+    rotationVel.y *= DAMPING;
+    // Auto gentle rotation when no interaction
+    if (Math.abs(rotationVel.x) < 0.001 && Math.abs(rotationVel.y) < 0.001) {
+      rotation.y += 0.0008;
+    }
+  }
+  boardGroup.rotation.x = rotation.x;
+  boardGroup.rotation.y = rotation.y;
+
+  // Animate selection torus
+  for (const mesh of pieceMeshes.values()) {
+    if (mesh.userData.selection && mesh.userData.selection.material.opacity > 0) {
+      mesh.userData.selection.rotation.z += 0.02;
+    }
+  }
+  // Pulse highlights
+  const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004);
+  for (const h of highlightMeshes) {
+    h.material.opacity = h.userData.moveTarget.capture ? (0.6 + pulse * 0.3) : (0.35 + pulse * 0.25);
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+</body>
+</html>
