@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>鼎泰豐 × LE LABO ｜ STEAM SCENT SERIES</title>
+<meta name="description" content="鼎泰豐 × LE LABO 聯名 STEAM SCENT SERIES 香氛蠟燭預購頁。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+TC:wght@300;400;500;600;700&family=Special+Elite&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -53,9 +54,7 @@
     vertical-align:middle;margin:0 12px;opacity:.6;
   }
 
-  /* =========================================================
-     NAV
-     ========================================================= */
+  /* NAV */
   nav.top{
     position:fixed; top:0; left:0; right:0; z-index:50;
     display:flex; align-items:center; justify-content:space-between;
@@ -69,17 +68,12 @@
     backdrop-filter:blur(8px);
     border-bottom:1px solid rgba(243,236,224,.08);
   }
-  nav.top .brand-l,
-  nav.top .brand-r{
-    display:flex; align-items:center;
-    background:transparent;
-    padding:0;
+  nav.top .brand-l, nav.top .brand-r{
+    display:flex; align-items:center; background:transparent; padding:0;
   }
   nav.top .brand-l img{ height:56px; width:auto; display:block; }
   nav.top .brand-r img{ height:46px; width:auto; display:block; }
-  nav.top ul{
-    list-style:none; display:flex; gap:34px;
-  }
+  nav.top ul{ list-style:none; display:flex; gap:34px; }
   nav.top ul a{
     font-family:var(--type);
     font-size:11px; letter-spacing:.3em; text-transform:uppercase;
@@ -87,102 +81,59 @@
   }
   nav.top ul a:hover{opacity:1}
 
-  /* =========================================================
-     HERO
-     ========================================================= */
+  /* HERO */
   .hero{
-    position:relative;
-    min-height:100vh;
-    background:var(--dtf-red-deep);
-    color:var(--ll-cream);
-    display:grid;
-    grid-template-columns: 1fr 1.1fr;
-    align-items:center;
-    overflow:hidden;
+    position:relative; min-height:100vh;
+    background:var(--dtf-red-deep); color:var(--ll-cream);
+    display:grid; grid-template-columns: 1fr 1.1fr;
+    align-items:center; overflow:hidden;
   }
-  .hero::before{ /* subtle grain/vignette */
-    content:"";
-    position:absolute;inset:0;
+  .hero::before{
+    content:""; position:absolute;inset:0;
     background:
       radial-gradient(ellipse at 30% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 95%),
       radial-gradient(ellipse at 80% 30%, rgba(139,26,35,.35), transparent 60%);
     pointer-events:none;
   }
-  .hero-text{
-    padding:140px 60px 80px 80px;
-    position:relative; z-index:2;
-  }
+  .hero-text{ padding:140px 60px 80px 80px; position:relative; z-index:2; }
   .hero-text .crest{
-    font-family:var(--type);
-    letter-spacing:.4em; font-size:11px;
+    font-family:var(--type); letter-spacing:.4em; font-size:11px;
     margin-bottom:28px; opacity:.85;
   }
   .hero-text h1{
-    font-family:var(--serif);
-    font-weight:400;
+    font-family:var(--serif); font-weight:400;
     font-size:clamp(56px, 8vw, 108px);
-    line-height:.95;
-    letter-spacing:.02em;
-    margin-bottom:30px;
+    line-height:.95; letter-spacing:.02em; margin-bottom:30px;
   }
-  .hero-text h1 em{
-    font-style:italic;
-    color:var(--ll-gold);
-  }
+  .hero-text h1 em{ font-style:italic; color:var(--ll-gold); }
   .hero-text .subtitle{
-    font-family:var(--serif-tc);
-    font-size:17px;
-    letter-spacing:.28em;
-    opacity:.85;
-    margin-bottom:42px;
+    font-family:var(--serif-tc); font-size:17px;
+    letter-spacing:.28em; opacity:.85; margin-bottom:42px;
   }
   .hero-text .cta{
     display:inline-flex; align-items:center; gap:14px;
-    border:1px solid var(--ll-cream);
-    padding:16px 32px;
-    font-family:var(--type);
-    font-size:11px; letter-spacing:.32em; text-transform:uppercase;
-    transition:.3s;
-    background:transparent; color:var(--ll-cream); cursor:pointer;
+    border:1px solid var(--ll-cream); padding:16px 32px;
+    font-family:var(--type); font-size:11px; letter-spacing:.32em; text-transform:uppercase;
+    transition:.3s; background:transparent; color:var(--ll-cream); cursor:pointer;
   }
-  .hero-text .cta:hover{
-    background:var(--ll-cream); color:var(--dtf-red-deep);
-  }
-
-  .hero-image{
-    position:relative;
-    height:100vh;
-    overflow:hidden;
-    background:#2a0508;
-  }
+  .hero-text .cta:hover{ background:var(--ll-cream); color:var(--dtf-red-deep); }
+  .hero-image{ position:relative; height:100vh; overflow:hidden; background:#2a0508; }
   .hero-image img{
-    position:absolute; inset:0;
-    width:100%; height:100%;
-    object-fit:cover; object-position:center;
-    display:block;
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center; display:block;
   }
   .hero-image::after{
-    content:"";
-    position:absolute; inset:0;
+    content:""; position:absolute; inset:0;
     background:linear-gradient(to right, rgba(74,13,18,.4), transparent 30%, transparent 70%, rgba(74,13,18,.3));
   }
-
-  /* steam particles, floating from the basket */
   .steam{
-    position:absolute;
-    pointer-events:none;
-    z-index:3;
-    bottom:0; left:0; right:0;
-    height:100%;
+    position:absolute; pointer-events:none; z-index:3;
+    bottom:0; left:0; right:0; height:100%;
   }
   .steam span{
-    position:absolute;
-    bottom:42%;
-    width:60px; height:60px;
+    position:absolute; bottom:42%; width:60px; height:60px;
     background:radial-gradient(circle, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 70%);
-    border-radius:50%;
-    filter:blur(14px);
-    opacity:0;
+    border-radius:50%; filter:blur(14px); opacity:0;
     animation: rise 7s linear infinite;
   }
   @keyframes rise{
@@ -192,389 +143,246 @@
     100% { transform: translate(var(--dx,20px), -380px) scale(1.6); opacity:0; }
   }
 
-  /* =========================================================
-     CONCEPT
-     ========================================================= */
+  /* CONCEPT */
   .concept{
-    background:var(--dtf-red-deep);
-    color:var(--ll-cream);
-    display:grid;
-    grid-template-columns: 1.05fr 1fr;
+    background:var(--dtf-red-deep); color:var(--ll-cream);
+    display:grid; grid-template-columns: 1.05fr 1fr;
     border-top:1px solid rgba(243,236,224,.08);
   }
-  .concept .text{
-    padding:120px 80px;
-  }
+  .concept .text{ padding:120px 80px; }
   .concept .text .label{ color:var(--ll-gold); margin-bottom:36px; display:block;}
   .concept h2{
-    font-family:var(--serif-tc);
-    font-weight:500;
-    font-size:42px;
-    letter-spacing:.18em;
-    margin-bottom:42px;
+    font-family:var(--serif-tc); font-weight:500;
+    font-size:42px; letter-spacing:.18em; margin-bottom:42px;
   }
   .concept p{
-    font-size:15px;
-    line-height:2;
-    letter-spacing:.08em;
-    opacity:.85;
-    max-width:440px;
+    font-size:15px; line-height:2; letter-spacing:.08em;
+    opacity:.85; max-width:440px;
   }
   .concept p + p{ margin-top:18px; }
   .concept .image{
     position:relative; min-height:600px; overflow:hidden; background:#1a0204;
   }
   .concept .image img{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover; display:block;
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
   }
 
-  /* =========================================================
-     NOTES (香氣 — 純圖片區，與 showcase 同規格)
-     ========================================================= */
+  /* NOTES (image-only) */
   .notes{
-    background:#0B0B0B;
-    padding:100px 0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    background:#0B0B0B; padding:100px 0;
+    display:flex; justify-content:center; align-items:center;
   }
   .notes-image{
-    display:block;
-    width:100%;
-    max-width:1200px;
-    height:auto;
-    margin:0 auto;
+    display:block; width:100%; max-width:1200px;
+    height:auto; margin:0 auto;
   }
 
-  /* =========================================================
-     PRODUCT (image left, text right)
-     ========================================================= */
+  /* PRODUCT */
   .product{
-    background:var(--ll-paper);
-    color:var(--ll-ink);
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    align-items:stretch;
+    background:var(--ll-paper); color:var(--ll-ink);
+    display:grid; grid-template-columns:1fr 1fr;
+    align-items:stretch; min-height:640px;
   }
-  .product{ min-height:640px; }
   .product .image{
     position:relative; overflow:hidden; background:var(--ll-cream-dk);
   }
   .product .image img{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover; display:block;
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
   }
   .product .text{
-    padding:80px 80px;
+    padding:80px;
     display:flex; flex-direction:column; justify-content:center;
   }
   .product .text .label{ color:var(--ll-gold); display:block; margin-bottom:24px;}
   .product h3{
-    font-family:var(--serif-tc);
-    font-weight:500;
-    font-size:34px;
-    letter-spacing:.16em;
-    margin-bottom:34px;
+    font-family:var(--serif-tc); font-weight:500;
+    font-size:34px; letter-spacing:.16em; margin-bottom:34px;
   }
   .product .meta{
-    font-family:var(--type);
-    font-size:12px;
-    letter-spacing:.18em;
-    line-height:2.2;
+    font-family:var(--type); font-size:12px;
+    letter-spacing:.18em; line-height:2.2;
     color:var(--ll-ink-soft);
     border-top:1px solid var(--ll-line-soft);
     border-bottom:1px solid var(--ll-line-soft);
-    padding:24px 0;
-    margin-bottom:34px;
+    padding:24px 0; margin-bottom:34px;
   }
   .product .meta span{ display:block; }
   .product .price{
-    font-family:var(--serif);
-    font-size:24px;
-    letter-spacing:.06em;
-    margin-bottom:28px;
+    font-family:var(--serif); font-size:24px;
+    letter-spacing:.06em; margin-bottom:28px;
   }
   .ll-btn{
     display:inline-flex; align-items:center; gap:14px;
-    border:1px solid var(--ll-ink);
-    padding:14px 28px;
-    font-family:var(--type);
-    font-size:11px; letter-spacing:.32em; text-transform:uppercase;
-    background:transparent; color:var(--ll-ink); cursor:pointer;
-    transition:.3s;
+    border:1px solid var(--ll-ink); padding:14px 28px;
+    font-family:var(--type); font-size:11px;
+    letter-spacing:.32em; text-transform:uppercase;
+    background:transparent; color:var(--ll-ink); cursor:pointer; transition:.3s;
   }
   .ll-btn:hover{ background:var(--ll-ink); color:var(--ll-cream); }
-  .ll-btn.dark{ border-color:var(--ll-cream); color:var(--ll-cream); }
-  .ll-btn.dark:hover{ background:var(--ll-cream); color:var(--ll-ink); }
 
-  /* =========================================================
-     GIFT BOX section (text on cream-dk + image)
-     ========================================================= */
+  /* GIFT BOX */
   .gift{
     background:var(--ll-cream-dk);
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    align-items:stretch;
+    display:grid; grid-template-columns:1fr 1fr;
+    align-items:stretch; min-height:640px;
   }
-  .gift{ min-height:640px; }
   .gift .image{
     position:relative; overflow:hidden; background:#3a0a10;
   }
   .gift .image img{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover; display:block;
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; display:block;
   }
   .gift .text{
-    padding:80px 80px;
+    padding:80px;
     display:flex; flex-direction:column; justify-content:center;
   }
   .gift .text .label{ color:var(--dtf-red); display:block; margin-bottom:24px;}
   .gift h3{
-    font-family:var(--serif-tc);
-    font-weight:500;
-    font-size:34px;
-    letter-spacing:.16em;
-    margin-bottom:30px;
+    font-family:var(--serif-tc); font-weight:500;
+    font-size:34px; letter-spacing:.16em; margin-bottom:30px;
   }
   .gift p{
-    font-size:14px; line-height:2;
-    letter-spacing:.1em;
-    color:var(--ll-ink-soft);
-    margin-bottom:28px;
-    max-width:420px;
+    font-size:14px; line-height:2; letter-spacing:.1em;
+    color:var(--ll-ink-soft); margin-bottom:28px; max-width:420px;
   }
   .gift .includes{
-    font-family:var(--type);
-    font-size:12px;
-    letter-spacing:.18em;
-    line-height:2.2;
+    font-family:var(--type); font-size:12px;
+    letter-spacing:.18em; line-height:2.2;
     color:var(--ll-ink-soft);
     border-top:1px solid rgba(0,0,0,.18);
-    padding-top:18px;
-    margin-bottom:34px;
+    padding-top:18px; margin-bottom:34px;
   }
 
-  /* =========================================================
-     RITUAL (使用方法 — 純圖片區，與 showcase 同規格)
-     ========================================================= */
+  /* RITUAL (image-only) */
   .ritual{
-    background:#0B0B0B;
-    padding:100px 0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    background:#0B0B0B; padding:100px 0;
+    display:flex; justify-content:center; align-items:center;
   }
   .ritual-image{
-    display:block;
-    width:100%;
-    max-width:1200px;
-    height:auto;
-    margin:0 auto;
+    display:block; width:100%; max-width:1200px;
+    height:auto; margin:0 auto;
   }
 
-  /* =========================================================
-     SHOWCASE — 香氣 + 使用方法 (極簡圖片區)
-     ========================================================= */
-  .showcase{
-    background:#0B0B0B;
-    padding:100px 0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:70px;
-  }
-  .showcase img{
-    display:block;
-    width:100%;
-    max-width:1200px;
-    height:auto;
-    margin:0 auto;
-  }
-  @media (max-width: 900px){
-    .showcase{ padding:70px 0; gap:50px; }
-    .showcase img{ width:90%; }
-  }
-  @media (max-width: 560px){
-    .showcase{ padding:50px 0; gap:40px; }
-    .showcase img{ width:90%; }
-  }
-
-  /* =========================================================
-     STORY VIDEO
-     ========================================================= */
-  .story{
-    background:var(--dtf-red-deep);
-    color:var(--ll-cream);
-    padding:120px 80px;
-    text-align:center;
-  }
-  .story .label{ color:var(--ll-gold); display:block; margin-bottom:18px; }
-  .story h3{
-    font-family:var(--serif-tc);
-    font-weight:500;
-    font-size:38px;
-    letter-spacing:.16em;
-    margin-bottom:60px;
-    line-height:1.4;
-  }
-  .story h3 em{
-    display:block;
-    font-family:var(--serif);
-    font-style:italic;
-    font-weight:400;
-    font-size:30px;
-    letter-spacing:.04em;
-    color:var(--ll-gold);
-    margin-top:14px;
-  }
-  .video-wrap{
-    position:relative;
-    max-width:1280px;
-    margin:0 auto;
-    background:#0a0204;
-    border:1px solid rgba(243,236,224,.18);
-    overflow:hidden;
-    /* No fixed aspect-ratio so the video controls its own height */
-  }
-  .video-wrap video{
-    display:block;
-    width:100%;
-    height:auto;
-    max-height:80vh;
-    object-fit:contain;
-    background:#000;
-  }
-
-  /* =========================================================
-     PRE-ORDER FORM
-     ========================================================= */
+  /* PRE-ORDER */
   .preorder{
-    background:var(--ll-paper);
-    padding:120px 80px;
-    text-align:center;
+    background:var(--ll-paper); padding:120px 80px; text-align:center;
   }
   .preorder .label{ color:var(--ll-gold); display:block; margin-bottom:18px; }
   .preorder h3{
-    font-family:var(--serif-tc);
-    font-weight:500;
-    font-size:38px;
-    letter-spacing:.32em;
-    margin-bottom:18px;
+    font-family:var(--serif-tc); font-weight:500;
+    font-size:38px; letter-spacing:.32em; margin-bottom:18px;
   }
   .preorder .lead{
-    font-size:14px;
-    letter-spacing:.18em;
-    color:var(--ll-ink-soft);
-    margin-bottom:60px;
+    font-size:14px; letter-spacing:.18em;
+    color:var(--ll-ink-soft); margin-bottom:60px;
   }
   form.po{
     max-width:880px; margin:0 auto;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px 32px;
-    text-align:left;
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:24px 32px; text-align:left;
   }
   form.po .field{ display:flex; flex-direction:column; gap:8px;}
   form.po label{
-    font-family:var(--type);
-    font-size:10px; letter-spacing:.4em; text-transform:uppercase;
+    font-family:var(--type); font-size:10px;
+    letter-spacing:.4em; text-transform:uppercase;
     color:var(--ll-ink-soft);
   }
   form.po input, form.po select{
-    border:none;
-    border-bottom:1px solid var(--ll-line-soft);
-    background:transparent;
-    padding:10px 2px;
-    font-family:var(--serif-tc);
-    font-size:15px;
-    color:var(--ll-ink);
-    outline:none;
-    transition:border-color .25s;
+    border:none; border-bottom:1px solid var(--ll-line-soft);
+    background:transparent; padding:10px 2px;
+    font-family:var(--serif-tc); font-size:15px;
+    color:var(--ll-ink); outline:none; transition:border-color .25s;
   }
-  form.po input:focus, form.po select:focus{
-    border-color:var(--dtf-red);
-  }
-  form.po .full{ grid-column:1/-1; }
+  form.po input:focus, form.po select:focus{ border-color:var(--dtf-red); }
   form.po .submit-row{
     grid-column:1/-1;
     display:flex; justify-content:space-between; align-items:center;
     margin-top:14px;
   }
   form.po .agree{
-    font-family:var(--type);
-    font-size:11px; letter-spacing:.18em;
+    font-family:var(--type); font-size:11px; letter-spacing:.18em;
     color:var(--ll-ink-soft);
     display:flex; align-items:center; gap:10px;
   }
   form.po button{
-    background:var(--dtf-red);
-    color:var(--ll-cream);
-    border:none;
-    padding:18px 36px;
-    font-family:var(--type);
-    font-size:11px; letter-spacing:.4em; text-transform:uppercase;
+    background:var(--dtf-red); color:var(--ll-cream);
+    border:none; padding:18px 36px;
+    font-family:var(--type); font-size:11px;
+    letter-spacing:.4em; text-transform:uppercase;
     cursor:pointer; transition:.3s;
   }
   form.po button:hover{ background:var(--dtf-red-deep); }
 
-  /* =========================================================
-     FOOTER
-     ========================================================= */
+  /* STORY VIDEO */
+  .story{
+    background:var(--dtf-red-deep); color:var(--ll-cream);
+    padding:120px 80px; text-align:center;
+  }
+  .story .label{ color:var(--ll-gold); display:block; margin-bottom:18px; }
+  .story h3{
+    font-family:var(--serif-tc); font-weight:500;
+    font-size:38px; letter-spacing:.16em;
+    margin-bottom:60px; line-height:1.4;
+  }
+  .story h3 em{
+    display:block; font-family:var(--serif);
+    font-style:italic; font-weight:400;
+    font-size:30px; letter-spacing:.04em;
+    color:var(--ll-gold); margin-top:14px;
+  }
+  .video-wrap{
+    position:relative; max-width:1280px; margin:0 auto;
+    background:#0a0204;
+    border:1px solid rgba(243,236,224,.18);
+    overflow:hidden;
+  }
+  .video-wrap video{
+    display:block; width:100%; height:auto;
+    max-height:80vh; object-fit:contain; background:#000;
+  }
+
+  /* FOOTER */
   footer{
-    background:var(--dtf-red-deep);
-    color:var(--ll-cream);
+    background:var(--dtf-red-deep); color:var(--ll-cream);
     padding:48px 80px;
     display:flex; justify-content:space-between; align-items:center;
     border-top:1px solid rgba(243,236,224,.1);
   }
-  footer .brands{
-    display:flex; align-items:center; gap:24px;
-  }
+  footer .brands{ display:flex; align-items:center; gap:24px; }
   footer .brands img{ display:block; height:48px; width:auto;}
   footer .brands img.lelabo{ height:38px;}
   footer .brands span.x{
-    font-family:var(--serif);
-    font-style:italic;
-    font-size:34px;
-    line-height:1;
-    opacity:.85;
-    color:var(--ll-cream);
+    font-family:var(--serif); font-style:italic;
+    font-size:34px; line-height:1; opacity:.85; color:var(--ll-cream);
   }
-  footer ul{
-    list-style:none; display:flex; gap:32px;
-  }
+  footer ul{ list-style:none; display:flex; gap:32px; }
   footer ul a{
-    font-family:var(--type);
-    font-size:11px; letter-spacing:.3em; text-transform:uppercase;
-    opacity:.8;
+    font-family:var(--type); font-size:11px;
+    letter-spacing:.3em; text-transform:uppercase; opacity:.8;
   }
   footer ul a:hover{ opacity:1; }
-  footer .social{
-    display:flex; gap:18px;
-  }
+  footer .social{ display:flex; gap:18px; }
   footer .social a{ opacity:.7; transition:.2s; font-size:14px;}
   footer .social a:hover{ opacity:1; }
 
-  /* =========================================================
-     Mobile nav toggle (hamburger)
-     ========================================================= */
+  /* Mobile nav toggle */
   .nav-toggle{
-    display:none;
-    background:transparent; border:none; color:var(--ll-cream);
-    cursor:pointer; padding:8px; margin-left:auto; margin-right:14px;
+    display:none; background:transparent; border:none;
+    color:var(--ll-cream); cursor:pointer;
+    padding:8px; margin-left:auto; margin-right:14px;
   }
   .nav-toggle span{
-    display:block; width:22px; height:1px; background:var(--ll-cream);
-    margin:5px 0; transition:.3s;
+    display:block; width:22px; height:1px;
+    background:var(--ll-cream); margin:5px 0; transition:.3s;
   }
   nav.top.open .nav-toggle span:nth-child(1){ transform:translateY(6px) rotate(45deg);}
   nav.top.open .nav-toggle span:nth-child(2){ opacity:0;}
   nav.top.open .nav-toggle span:nth-child(3){ transform:translateY(-6px) rotate(-45deg);}
 
-  /* =========================================================
-     Responsive — TABLET (≤ 1100px)
-     ========================================================= */
+  /* Responsive — Tablet (≤1100px) */
   @media (max-width: 1100px){
     .hero-text{ padding:120px 40px 60px; }
     .concept .text, .product .text, .gift .text{ padding:80px 40px; }
@@ -583,9 +391,7 @@
     .story h3{ font-size:40px; }
   }
 
-  /* =========================================================
-     Responsive — TABLET-PORTRAIT / SMALL LAPTOP (≤ 900px)
-     ========================================================= */
+  /* Responsive — Tablet portrait (≤900px) */
   @media (max-width: 900px){
     nav.top{ padding:14px 20px; }
     nav.top ul{
@@ -593,8 +399,7 @@
       background:rgba(74,13,18,.97);
       backdrop-filter:blur(10px);
       flex-direction:column; gap:0;
-      padding:14px 0;
-      max-height:0; overflow:hidden;
+      padding:14px 0; max-height:0; overflow:hidden;
       transition:max-height .35s ease;
       border-top:1px solid rgba(243,236,224,.08);
     }
@@ -616,11 +421,9 @@
     .concept .image, .product .image, .gift .image{
       min-height:auto; aspect-ratio:4/3;
     }
-    /* On mobile: image always on top, text below — feels more natural */
     .concept .image{ order:1; } .concept .text{ order:2; }
     .product .image{ order:1; } .product .text{ order:2; }
     .gift .image{ order:1; }    .gift .text{ order:2; }
-
     .concept h2, .product h3, .gift h3{ font-size:26px; letter-spacing:.14em; }
     .concept p, .gift p{ font-size:14px; }
 
@@ -641,9 +444,7 @@
     footer ul{ flex-wrap:wrap; justify-content:center; gap:14px 22px;}
   }
 
-  /* =========================================================
-     Responsive — PHONE (≤ 560px)
-     ========================================================= */
+  /* Responsive — Phone (≤560px) */
   @media (max-width: 560px){
     nav.top{ padding:12px 16px; }
     nav.top .brand-l img{ height:38px; }
@@ -674,8 +475,6 @@
     form.po{ grid-template-columns:1fr; gap:18px; }
     form.po button{ padding:16px 24px; font-size:10px; letter-spacing:.3em; width:100%;}
 
-    .story .lead{ font-size:13px; letter-spacing:.18em; margin-bottom:40px; }
-
     footer{ padding:30px 18px; gap:16px;}
     footer .brands{ gap:18px; }
     footer .brands img{ height:38px; }
@@ -690,7 +489,7 @@
 <!-- ====== TOP NAV ====== -->
 <nav class="top" id="topnav">
   <a class="brand-l" href="#top" aria-label="鼎泰豐">
-    <img src="dintaifung_nav.png" alt="鼎泰豐 DIN TAI FUNG">
+    <img src="assets/logo-dtf.png" alt="鼎泰豐 DIN TAI FUNG">
   </a>
   <button class="nav-toggle" id="navToggle" aria-label="開啟選單">
     <span></span><span></span><span></span>
@@ -705,7 +504,7 @@
     <li><a href="#story">故事</a></li>
   </ul>
   <a class="brand-r" href="#top" aria-label="Le Labo">
-    <img src="Lelabologo_nav.png" alt="LE LABO">
+    <img src="assets/logo-lelabo.png" alt="LE LABO">
   </a>
 </nav>
 
@@ -720,7 +519,7 @@
     </button>
   </div>
   <div class="hero-image">
-    <img src="1.jpg" alt="鼎泰豐 × Le Labo 蒸籠蠟燭 — 紅色背景">
+    <img src="assets/hero.jpg" alt="鼎泰豐 × Le Labo 蒸籠蠟燭 — 紅色背景">
     <div class="steam" aria-hidden="true">
       <span style="left:54%; --dx:-30px; animation-delay:0s;"></span>
       <span style="left:58%; --dx:20px;  animation-delay:1.2s;"></span>
@@ -746,19 +545,19 @@
        於紐約手工調製、限量編號。</p>
   </div>
   <div class="image">
-    <img src="2.jpg" alt="實驗室裡的香氛蠟燭">
+    <img src="assets/concept.jpg" alt="實驗室裡的香氛蠟燭">
   </div>
 </section>
 
-<!-- ====== NOTES (香氣) ====== -->
+<!-- ====== NOTES ====== -->
 <section class="notes" id="notes" aria-label="香氣">
-  <img class="notes-image" src="香氣.png" alt="香氣">
+  <img class="notes-image" src="assets/notes.png" alt="香氣">
 </section>
 
 <!-- ====== PRODUCT ====== -->
 <section class="product" id="product">
   <div class="image">
-    <img src="3.jpg" alt="小籠包香氛蠟燭與蒸籠">
+    <img src="assets/product.jpg" alt="小籠包香氛蠟燭與蒸籠">
   </div>
   <div class="text">
     <span class="label">The Product</span>
@@ -780,7 +579,7 @@
 <!-- ====== GIFT BOX ====== -->
 <section class="gift" id="gift">
   <div class="image">
-    <img src="5.jpg" alt="鼎泰豐 × Le Labo 限定禮盒">
+    <img src="assets/gift.jpg" alt="鼎泰豐 × Le Labo 限定禮盒">
   </div>
   <div class="text">
     <span class="label">The Gift Box</span>
@@ -798,9 +597,9 @@
   </div>
 </section>
 
-<!-- ====== RITUAL (使用方法) ====== -->
+<!-- ====== RITUAL ====== -->
 <section class="ritual" id="ritual" aria-label="使用方法">
-  <img class="ritual-image" src="使用方法.png" alt="使用方法">
+  <img class="ritual-image" src="assets/ritual.png" alt="使用方法">
 </section>
 
 <!-- ====== PRE-ORDER ====== -->
@@ -841,12 +640,7 @@
   <span class="label">User Story</span>
   <h3>一籠蒸氣的記憶 <em>A Memory in Steam</em></h3>
   <div class="video-wrap">
-    <video
-      controls
-      preload="metadata"
-      playsinline
-      poster="1.jpg"
-      src="使用者故事.mov">
+    <video controls preload="metadata" playsinline poster="assets/hero.jpg" src="assets/story.mov">
       您的瀏覽器不支援 video 標籤。
     </video>
   </div>
@@ -855,9 +649,9 @@
 <!-- ====== FOOTER ====== -->
 <footer>
   <div class="brands">
-    <img src="dintaifung_nav.png" alt="鼎泰豐">
+    <img src="assets/logo-dtf.png" alt="鼎泰豐">
     <span class="x">×</span>
-    <img class="lelabo" src="Lelabologo_nav.png" alt="LE LABO">
+    <img class="lelabo" src="assets/logo-lelabo.png" alt="LE LABO">
   </div>
   <ul>
     <li><a href="#">隱私權聲明</a></li>
@@ -872,19 +666,14 @@
 </footer>
 
 <script>
-  // Sticky nav background on scroll
   const nav = document.getElementById('topnav');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 60) nav.classList.add('scrolled');
     else nav.classList.remove('scrolled');
   });
-
-  // Hamburger toggle for mobile
   const navToggle = document.getElementById('navToggle');
   const navList   = document.getElementById('navList');
-  navToggle.addEventListener('click', () => {
-    nav.classList.toggle('open');
-  });
+  navToggle.addEventListener('click', () => { nav.classList.toggle('open'); });
   navList.addEventListener('click', (e) => {
     if (e.target.tagName === 'A') nav.classList.remove('open');
   });
